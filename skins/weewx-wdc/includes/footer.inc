@@ -17,10 +17,7 @@
       <div class="bx--col-sm-12 bx--col-lg-6">
         <p>
           $pgettext("Geographical", "Altitude"): $station.altitude<br />
-          $gettext("Latitude"): $station.latitude[0]&deg; $station.latitude[1]'
-          $station.latitude[2]<br />
-          $gettext("Longitude"): $station.longitude[0]&deg;
-          $station.longitude[1]' $station.longitude[2]
+          Volente, TX
         </p>
       </div>
     </div>
@@ -42,7 +39,7 @@
       <div class="bx--col">
         <!--prettier-ignore-->
         <p class="footnote">
-          $gettext("This station is controlled by <a target='_blank' href='https://weewx.com'>WeeWX</a>, an experimental weather software system written in Python.")
+           $gettext("Let's send <a target='_blank' href='https://coop.farm'>chickens</a> to mars.")
         </p>
       </div>
     </div>

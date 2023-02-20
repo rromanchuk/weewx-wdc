@@ -29,7 +29,7 @@
 />
 <meta
   name="description"
-  content='Weewx $station.location - $gettext("Station Description")'
+  content='rromanchuk | Weather Station | Volente, TX'
 />
 <link rel="manifest" href="$get_base_path(path='manifest.json')" />
 <meta name="theme-color" content="#161616" />

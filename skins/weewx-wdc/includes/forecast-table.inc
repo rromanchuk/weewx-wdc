@@ -713,7 +713,7 @@
         #for $x, $period in enumerate($periods)
         <bx-structured-list-cell class="index-$x">
           <!--prettier-ignore-->
-          #if $period.pop.raw > 0
+          #if $period.pop.raw is not None and $period.pop.raw > 0
             $period.pop.format('%.0f','')
           #end if
         </bx-structured-list-cell>
