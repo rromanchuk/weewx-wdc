@@ -36,3 +36,5 @@ test/*/artifacts*
 /playwright/.cache/
 
 .ddev
+.env
+shdotenv

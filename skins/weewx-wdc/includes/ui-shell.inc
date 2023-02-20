@@ -13,7 +13,7 @@
   src="https://1.www.s81c.com/common/carbon/web-components/version/v1.21.0/button.min.js"
 ></script>
 
-<bx-header aria-label="Weewx $station.location - $current.dateTime">
+<bx-header aria-label="rromanchuk | $station.location - $current.dateTime">
   <bx-header-menu-button
     button-label-active="Close menu"
     button-label-inactive="Open menu"
@@ -21,7 +21,7 @@
   <bx-header-name href="$get_base_path(path='index.html')" prefix="">
     <!--prettier-ignore-->
     #include "includes/icons/wdc.svg"
-    <span part="prefix" class="bx--header__name--prefix">WeeWX</span>
+    <span part="prefix" class="bx--header__name--prefix"></span>
     $station.location
   </bx-header-name>
   <bx-header-nav menu-bar-label="Weewx $station.location - $current.dateTime">

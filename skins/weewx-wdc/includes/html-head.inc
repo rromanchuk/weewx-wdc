@@ -6,6 +6,15 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/webcomponentsjs/2.6.0/webcomponents-loader.min.js"></script>
+<script async src="https://metrics.romanch.uk/gtag/js?id=G-24Q5EDRSF7"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-24Q5EDRSF7', {
+    'transport_url': 'https://metrics.romanch.uk'
+  });
+</script>
 <!-- <script>
   window.WebComponents = window.WebComponents || {};
   window.WebComponents.root = "node_modules/@webcomponents/webcomponentsjs/";
