@@ -927,7 +927,13 @@ index 465d4ad..aa8bad6 100644
 
 - GH-181 [BUG] xAxis: Date mismatch in combined charts. Especially when using cumulative aggregation. Feel free to comment if you have more infos, or also noticed this issue.
 
-# Next
+# 3.5.1
 
 - Bugfix: Reason: '<' not supported between instances of 'NoneType' and 'float' in the skins/weewx-wdc/year-%Y.html.tmpl file GH-256
 - Bugfix: Stat tile on page Today using custom data binding does not appear if the same observation does not exist in main data binding GH-258
+
+## Known Issues
+
+- GH-181 [BUG] xAxis: Date mismatch in combined charts. Especially when using cumulative aggregation. Feel free to comment if you have more infos, or also noticed this issue.
+
+# Next
