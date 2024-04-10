@@ -124,7 +124,7 @@ When updating the skin to the latest version:
 3. Do all 4 steps from the [Installation guide](#installation)
 4. Run the reports to re-generate the html files
 
-   `weectl report run weewx-wdc`
+   `weectl report run WdcReport`
 
 ## [Configuration/Usage](https://github.com/Daveiano/weewx-wdc/wiki)
 
