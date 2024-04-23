@@ -19,15 +19,19 @@ sed -i -z -e "s|station_type = Interceptor|station_type = Simulator|g" "${WEEWX_
 mv "${WEEWX_HOME}"/skins/weewx-wdc/skin-forecast.conf "${WEEWX_HOME}"/skins/weewx-wdc/skin.conf
 
 echo "Starting weewx"
-"${WEEWX_HOME}"/bin/weewxd "${WEEWX_HOME}"/weewx.conf --daemon
+# shellcheck source=/dev/null
+. "${WEEWX_HOME}/weewx-venv/bin/activate" && weewxd --config "${WEEWX_HOME}"/weewx.conf --daemon
 
 echo "$CURRENT_DATE"
 echo "Sleeping 40 seconds..."
 sleep 40
 
+# TODO: Replace faketime by using weewx wuth the epoch argument.
 echo "Starting wee_reports..."
+# shellcheck source=/dev/null
+. "${WEEWX_HOME}/weewx-venv/bin/activate"
 FAKETIME="@$CURRENT_DATE" date
-FAKETIME="@$CURRENT_DATE" "${WEEWX_HOME}"/bin/wee_reports
+FAKETIME="@$CURRENT_DATE" weectl report run --config "${WEEWX_HOME}/weewx.conf"
 
 #echo "Starting wee_reports..."
 #FAKETIME="@$CURRENT_DATE" date

@@ -519,9 +519,13 @@ Line 133:
 
 # 3.0.0
 
+**Requires WeeWX >=v4.9.0**
+
 - Bugfix: Forecast error using OWM Forecast [GH-100]
+- Bugfix: Forecast NWS Bug: Reason: '>' not supported between instances of 'NoneType' and 'int' [GH-118]
+- Bugfix: Why are the Weather intervals (week, month, year) all off by one day? [GH-116]
 - Show weather data for a specific day [GH-67]
-- Make diagrams configurable per context (per period) / Refactor diagrams configuration [GH-73], diagrams can now be configured per context, eg. day, week or month. Per default, the day and week pages do not include the `outTemp` min/max/avg diagram anymore.
+- Make diagrams configurable per context (per period) / Refactor diagrams configuration [GH-73]. Diagrams can now be configured per context, eg. day, week or month. Per default, the day and week pages do not include the `outTemp` min/max/avg diagram anymore.
 - Enhancements for weewx-forecast support [GH-95]
 - Make show_min, show_max, show_sum configurable for stat tiles [GH-94]
 - Support for custom `data_bindings` [GH-71]
@@ -530,457 +534,406 @@ Line 133:
 - Configurable Rounding [GH-89]
 - Make markers configurable [GH-106]
 - Automatic Refresh [GH-105]
+- Support for combining different diagram types (eg. line and bar) [GH-75]. This adds an own implementation of chart rendering based directly on [D3.js](https://d3js.org/), please see https://github.com/Daveiano/weewx-wdc/wiki/Configuration#ENABLE_D3_DIAGRAMS (a Feature Flag was added to skin.conf for activating the new charts)
+- Along [GH-75]: Added new climatogram (combined chart consisting of rain as bar and outTemp as line) for statistics and yearly statistics pages
+- Update radar_img to allow for raw HTML (for using eg. iFrames as radar maps) [GH-108]
+- Wind direction aggregation - use vecdir instead of avg [GH-119]
 
 **Please have a look at the [wiki](https://github.com/Daveiano/weewx-wdc/wiki) for information on how to configure the new features.**
 
-## Changes made to skin.conf since X.X.X
+## Changes made to skin.conf since 2.3.3
 
-Line 5:
+This update contains like a rewrite of the skin.conf file, a complete diff can be found here (please click on "Load diff"):
+
+https://github.com/Daveiano/weewx-wdc/compare/v2.3.3...7da0c421941c8e61e5aaf2b6d236ae7cf231009b#diff-ba225fb627dcbf577d0d1fde0f18d93e8e2cf2097c37086cd28ef23e8e7bd820
+
+# 3.0.1
+
+- Bugfix: Some built-in fields require adding an entry to [[Icons]] GH-124
+- Added icon for no2, pm1_0, pm2_5 and pm10_0
+- Bugfix: Unexpected IndexError in get_unit_label GH-123
+- Bugfix: Resolved a caching issue for radar images (service worker was caching too much here)
+
+## No changes made to skin.conf since 3.0.0
+
+# 3.1.0
+
+- Live updates via MQTT driven stat tiles on front page GH-131
+- Add slot for webcam image(s) to front page. Add optional extra webcam page GH-127 and https://github.com/Daveiano/weewx-wdc/discussions/121#discussioncomment-5280575
+
+## Changes made to skin.conf since 3.0.1
+
+Line 29, following:
 
 ```diff
-+[ObservationBindings]
-+    [[custom_obs_1]]
-+        data_binding = extension_1_binding # eg wx_binding
-+        observation = obs_key # eg. outTemp
-+    [[custom_obs_2]]
-+        data_binding = extension_2_binding
-+        observation = another_obs_key
-```
+#radar_html = ''
+#radar_heading = Recent radar
 
-Line 18:
++# Set to True to have the Forecast tile and the radar/externals tile to have the same width.
++# Default is forecast = 2/3 and radar tile = 1/3.
++forecast_radar_equal_width = False
 
-```diff
-+# If activated the Fontpage (index.html) will be automatically be
-+# refreshed in the browser every 300 seconds.
-+#refresh_interval = 300
-```
++[[mqtt]]
++     mqtt_websockets_enabled = 0
++     mqtt_websockets_host = "localhost"
++     mqtt_websockets_port = 9001
++     mqtt_websockets_ssl = 0
++     mqtt_websockets_topic = "weather/loop"
 
-Line 20:
++# Include various external sources (eg. webcams) here.
++#[[external_1]]
++#    source = '<img src="http://your-server.com/uploads/webcam01.jpg" />'
++#    title = Webcam 1
++#    title_long = "Webcam 1, facing North"
 
-```diff
++#[[external_2]]
++#    source = '<img src="http://your-server.com/uploads/webcam02.jpg" />'
++#    title = Webcam 2
++#    title_long = "Webcam 2, facing South"
+
++#[[external_3]]
++#    source = '<img src="http://your-server.com/uploads/webcam01.gif" />'
++#    title = Webcam 1
++#    title_long = "Webcam 1, Timelapse"
+
++#[[external_4]]
++#    source = '<img src="http://your-server.com/uploads/webcam02.gif" />'
++#    title = Webcam 2
++#    title_long = "Webcam 2, Timelapse"
+
 [[forecast_zambretti]]
--    enable = True
-+    enable = False
-
-[[forecast_table_settings]]
-     source = WU
-     num_periods = 72
-     num_days = 5
--    # Todo: Does not make sense?
--    show_legend = 1
--    show_hourly = 0
-+    show_hourly = 1
-     show_day = 1
-     show_date = 1
-     show_outlook = 1
-     show_temp = 1
-     show_dewpoint = 0
-     show_humidity = 0
-     show_wind = 1
-     show_tides = 0
-     show_sun = 1
-     show_moon = 1
-     show_pop = 1
-     show_precip = 1
--    show_obvis = 0
+   enable = False
 ```
 
-Line 70:
+Line 508:
 
 ```diff
-     stat_tile_observations = outTemp, outHumidity, barometer, windSpeed, windDir, windGust, windGustDir, rain, rainRate, snowDepth, dewpoint, windchill, heatindex, UV, ET, radiation, appTemp, cloudbase, extraTemp1, extraHumid1, extraTemp2, extraHumid2, extraTemp3, extraHumid3, extraTemp4, extraHumid4, extraTemp5, extraHumid5, extraTemp6, extraHumid6, extraTemp7, extraHumid7, extraTemp8, extraHumid8
--    diagram_tile_observations = temp_min_max_avg, tempdew, outHumidity, barometer, windchill_heatindex, wind, windDir, windRose, rain, rainRate, snowDepth, UV, ET, radiation, cloudbase, appTemp
+[[[about]]]
+   template = about.html.tmpl
+   title = About
++#[[[externals]]]
++   #template = externals.html.tmpl
++   #title = Webcams/Externals
+#[[[DWD]]]
+   #template = dwd.html.tmpl
+   #title = Vorhersage vom DWD
+```
+
+Line 567:
+
+```diff
+[CopyGenerator]
+-    copy_once = dist/main.js, dist/main.css, plotly-custom-build.min.js, favicon.ico, manifest.json, icon-192x192.png, icon-256x256.png, icon-384x384.png, icon-512x512.png, service-worker.js, offline.html, dist/assets
++    copy_once = dist/main.js, dist/main.css, plotly-custom-build.min.js, dist/live-updates.js, favicon.ico, manifest.json, icon-192x192.png, icon-256x256.png, icon-384x384.png, icon-512x512.png, service-worker.js, offline.html, dist/assets
+```
+
+# 3.1.1
+
+- Bugfix: Visual padding bug in single radar tile on front page
+- Bugfix: Not working tabs for radar/webcams when used with enabled forecast extension
+- Bugfix: (MQTT) Handle observations with underscores GH-139
+- Allow user to set complete "Forecast & Radar" heading GH-141, **Note:** `radar_heading` is replaced by `forecast_radar_heading`
+
+## Changes made to skin.conf since 3.1.0
+
+Line 27:
+
+```diff
+-#radar_heading = Recent radar
++# The Foreacst/Radar/Webcam section heading.
++#forecast_radar_heading = "Forecast & Recent radar"
+```
+
+# 3.2.0
+
+- Bugfix: Adding 'Voltage' observations make icons disappear on today page GH-144
+- Added default Translation of combined diagram labels GH-149
+- Added Sensor Status Page GH-154 (https://github.com/Daveiano/weewx-wdc/wiki/Sensor-Status-Page)
+- Combine rain and rainRate tile to get rid of $current.rain GH-147
+- Add `color_dark` to diagrams config to allow explicitly set chart colors in dark mode GH-163
+- Update of D3 charts / Remove nivo and switch to native [D3.js](https://d3js.org/) charts GH-117
+  - Support yScaleMin, yScaleMax, offset, enableArea, areaOpacity, enablePoints, curve, pointSize and lineWidth on a per observation basis, not per chart
+  - Fixed legend position
+  - Markers for multi-unit charts
+  - Configurable Date/Time for Axis and tooltips
+  - Fixed strange looking Climatogram (buggy yScale) for short periods (< 2 years)
+  - Added Date/Time localization for charts
+
+## Changes made to skin.conf since 3.1.1
+
+For a complete diff, please see:
+
+https://github.com/Daveiano/weewx-wdc/compare/v3.1.1...00c79357#diff-ba225fb627dcbf577d0d1fde0f18d93e8e2cf2097c37086cd28ef23e8e7bd820
+
+# 3.3.0
+
+- Bugfix: Some observations with aggregate_imterval `sum` could be updated to `NaN` via MQTT under some circumstances GH-166
+- Bugfix: Getting the chart properties if observation is not included in [diagrams] config GH-172
+- Bugfix: Minor Spelling Error on Some Tiles GH-168
+- Added/fixed some more translations (Chart legends, Stats page)
+- Bugfix: (MQTT) Wind Speed Direction and Wind Gust Direction are Equal/Change At Same Time GH-177
+- Support for weewx-cmon GH-169 (https://github.com/Daveiano/weewx-wdc/wiki/Support-for-weewx-cmon)
+- Add support for Classic layout on Sensor Status page
+- Added support for displaying observations in stat tiles (and batteries) that are not saved to DB (only available via the `$current` tag) GH-140 and https://groups.google.com/g/weewx-user/c/AwhvlJ-DRUQ/m/bzLWZV19DQAJ
+- Add support for weewx-xaggs (configurable tiles to show historical data) GH-170 (https://github.com/Daveiano/weewx-wdc/wiki/Support-for-weewx-xaggs)
+- Extend Stats/Climatological days table. Added rain stats (last rain, most consecutive days of rain) GH-171
+- New Chart Type: Gauge GH-155 (https://github.com/Daveiano/weewx-wdc/wiki/Gauges)
+- Added support for custom XTypes (for charts) that need a \*\*config_dict GH-180
+- Extended Webcams/Externals (see the updated [wiki](https://github.com/Daveiano/weewx-wdc/wiki/Webcams-and-Externals-Page)) GH-167
+
+  - **Attention:** You need to update your skin.conf if you were using the webcams/externals:
+
+    Before:
+
+    ```
+    [Extras]
+       Include various external sources (eg. webcams) here.
+       [[external_1]]
+          source = '<img src="http://your-server.com/uploads/webcam01.jpg" />'
+          title = Webcam 1
+          title_long = "Webcam 1, facing North"
+    ```
+
+    After:
+
+    ```
+    [Extras]
+       # Include various external sources (eg. webcams) here.
+       [[externals]]
+       #  description = 'This description will be shown at the Webcams/Externals page.
+          [[[external_1]]]
+             source = '<img src="http://your-server.com/uploads/webcam01.jpg" />'
+             title = Webcam 1
+             title_long = "Webcam 1, facing North"
+             description = 'The image is updated every 80 seconds, nighttime every 100 seconds.'
+             show_on_front = True
+             show_on_page = True
+    ```
+
+## Changes made to skin.conf since 3.2.0
+
+See https://github.com/Daveiano/weewx-wdc/compare/v3.2.0...11eed6b3#diff-ba225fb627dcbf577d0d1fde0f18d93e8e2cf2097c37086cd28ef23e8e7bd820 for a complete diff.
+
+## Known Issues
+
+- GH-181 [BUG] xAxis: Date mismatch in combined charts. Especially when using cumulative aggregation. Feel free to comment if you have more infos, or also nooticed this issue.
+
+# 3.4.0
+
+- Bugfix: base_path missing for NOAA Report HREF GH-184
+- Bugfix: Removed accidentally added Climatogram on year and stats page
+- Bugfix: Fixed encoding issue when using special chars in oridinate labels
+- Bugfix: Wind and Gust speed have a space between unit and comma (and added missing apostrophe to Yesterday's and Today's) GH-200
+- Bugfix: Division by zero in get_windrose_data GH-192
+- Bugfix: Manifest.json does not use base_path GH-197
+- Bugfix: Tool Tip out of Scope GH-194
+- Bugfix: Observations with $current N/A values are not shown anymore in stat-tiles/conditions table on day page GH-188
+- Bugfix: Day Mix/Max Values in Tiles Do Not reset at Midnight GH-198
+- Bugfix: Fixed a bug where markers where not shown if multiple were added in a single unit chart GH-216
+- Added `show_min_max` configuration to gauges config, added ordinal display for windDir gauge min/max
+- Only show 3 decimals for the geocode provided by weewx-forecast GH-191
+- Make sidebar scrollable (if there are too many items) GH-193
+- Make icon/logo user configurable GH-205
+- Enhancement to the All Time Statistics: Show climatological days per month and per year. GH-196
+- Added NL translation, thanks to user @dystechnic
+- Added configurable 'Clickable' tiles GH-211
+
+## Changes made to skin.conf since 3.3.0
+
+See https://github.com/Daveiano/weewx-wdc/compare/v3.3.0...580071ca175a03fe4924ba3d4d6a8feece6623df#diff-ba225fb627dcbf577d0d1fde0f18d93e8e2cf2097c37086cd28ef23e8e7bd820 for a complete diff.
+
+## Known Issues
+
+- GH-181 [BUG] xAxis: Date mismatch in combined charts. Especially when using cumulative aggregation. Feel free to comment if you have more infos, or also noticed this issue.
+
+# 3.5.0
+
+- Bugfix: Fixed "ValueError: could not convert string to float" in forecast, introduced in GH-191
+- Bugfix: Added missing `nl.conf` in `install.py` GH-221
+- Bugfix: Fixed Gauge tiles daily reset (via MQTT)
+- Bugfix: year-%Y.html.tmpl fails when changing group_speed to knots in weewx.conf GH-239
+- Bugfix: Translation Footer Text 'This station is controlled by...' GH-238
+- Bugfix: Fix page title in dwd.html.tmpl GH-246
+- Bugfix: Fix page title in externals.html.tmpl GH-244
+- Open Webcam Links/Stat Tile links in a Modal GH-220
+- Bugfix: Max Rain Rate Does Not Reset GH-224
+- Added MQTT connection with username/password GH-225
+- Added finnish translation GH-230
+- Added "Precipitation detail" on forecast display (show rain/snow separately) GH-231
+- Allow to add custom content to front page via custom templates GH-217
+- Updated windGust display in forecast table GH-240
+- Updated sorting of min/max graphs in the `temp_min_max_avg` graph GH-247
+- Added new property for charts: `legendPosition` - Change legend position GH-228
+- Added option to set default theme (light/dark/auto) GH-241
+- Added per-month statistic tables GH-215
+- Added `windRose_legend_show_units` to hide the units in the windRose legend, added `hide_tick_unit` for gauges GH-249
+- Added colored Temperature GH-243
+
+## Changes made to skin.conf since 3.4.0
+
+<details>
+
+<summary>Diff</summary>
+
+```diff
+diff --git a/skins/weewx-wdc/skin.conf b/skins/weewx-wdc/skin.conf
+index 465d4ad..aa8bad6 100644
+--- a/skins/weewx-wdc/skin.conf
++++ b/skins/weewx-wdc/skin.conf
+@@ -1,6 +1,6 @@
+ # configuration file for the weewx-wdc skin
+ SKIN_NAME = Weather Data Center
+-SKIN_VERSION = 3.4.0
++SKIN_VERSION = 3.5.0
+
+ # For instructions, see https://github.com/Daveiano/weewx-wdc/wiki/Custom-data-bindings
+ [ObservationBindings]
+@@ -30,9 +30,13 @@ SKIN_VERSION = 3.4.0
+
+     # The radar code. Full html allowed.
+     #radar_html = ''
++
+     # The Foreacst/Radar/Webcam section heading.
+     #forecast_radar_heading = "Forecast & Recent radar"
+
++    # Open the radar and external images/videos in a modal.
++    open_radar_and_externals_modal = False
++
+     # Set to True to have the Forecast tile and the radar/externals tile to have the same width.
+     # Default is forecast = 2/3 and radar tile = 1/3.
+     forecast_radar_equal_width = False
+@@ -44,6 +48,8 @@ SKIN_VERSION = 3.4.0
+         mqtt_websockets_port = 9001
+         mqtt_websockets_ssl = 0
+         mqtt_websockets_topic = "weather/loop"
++        mqtt_websockets_username = ""
++        mqtt_websockets_password = ""
+
+     # For instructions, see https://github.com/Daveiano/weewx-wdc/wiki/Webcams-and-Externals-Page
+     # Include various external sources (eg. webcams) here.
+@@ -79,6 +85,7 @@ SKIN_VERSION = 3.4.0
+         show_moon = 1
+         show_pop = 1
+         show_precip = 1
++        show_precip_detail = 1
+
+     # For instructions, see https://github.com/Daveiano/weewx-wdc/wiki/Support-for-weewx-DWD
+     #[[weewx-DWD]]
+@@ -110,6 +117,9 @@ SKIN_VERSION = 3.4.0
+     # 'alternative' or 'classic'.
+     layout = 'alternative'
+
++    # 'auto', 'light' or 'dark'.
++    default_theme = 'auto'
++
+     # Date/Time localization for charts. Available locales: de-DE, en-US, en-GB, it-IT, nl-NL.
+     # If not set, the value from weewx.conf (reports section) will be used. If lang = en, then en-US will be used (sorry GB!).
+     #date_time_locale = en-US
+@@ -139,6 +149,12 @@ SKIN_VERSION = 3.4.0
+     show_min_max_time_week = False
+     show_min_max_time_month = False
+
++    # Color the outTemp stat tile based on the temperature. Only available for alternative layout.
++    outTemp_stat_tile_color = False
++    outTemp_stat_tile_color_transparency = 0.35
++    outTemp_stat_tile_color_min = -20
++    outTemp_stat_tile_color_max = 40
++
+     # windDir as oridnals (N, E, S, W).
      stat_tile_winddir_ordinal = True
      diagram_tile_winddir_ordinal = True
-     show_min_max_time_day = False
-```
+@@ -146,6 +162,7 @@ SKIN_VERSION = 3.4.0
+     # Windrose.
+     windRose_colors = "#f3cec9", "#e7a4b6", "#cd7eaf", "#a262a9", "#6f4d96", "#3d3b72"
+     windRose_show_beaufort = True
++    windRose_legend_show_units = True
 
-Line 84:
+     # Climatogram on year and statistics pages.
+     climatogram_enable_stats = True
+@@ -183,6 +200,7 @@ SKIN_VERSION = 3.4.0
+         color_scheme = interpolateRdBu
+         invert_color_scheme = 1
+         show_min_max = 1
++        hide_tick_unit = 0
 
-```diff
-# What to show for the stat tiles.
--stat_tile_observations = outTemp, outHumidity, barometer, windSpeed, windDir, windGust, windGustDir, rain, rainRate, snowDepth, dewpoint, windchill, heatindex, UV, ET, radiation, appTemp, cloudbase, extraTemp1, extraHumid1, extraTemp2, extraHumid2, extraTemp3, extraHumid3, extraTemp4, extraHumid4, extraTemp5, extraHumid5, extraTemp6, extraHumid6, extraTemp7, extraHumid7, extraTemp8, extraHumid8
-+stat_tile_observations = outTemp, outHumidity, barometer, windSpeed, windDir, windGust, windGustDir, windrun, rain, rainRate, snowDepth, dewpoint, windchill, heatindex, UV, ET, radiation, appTemp, cloudbase, extraTemp1, extraHumid1, extraTemp2, extraHumid2, extraTemp3, extraHumid3, extraTemp4, extraHumid4, extraTemp5, extraHumid5, extraTemp6, extraHumid6, extraTemp7, extraHumid7, extraTemp8, extraHumid8
-+# Stat tiles: Min/Max/Sum settings.
-+stat_tiles_show_min = outTemp, outHumidity, barometer, pressure, altimeter, snowDepth, heatindex, dewpoint, windchill, cloudbase, appTemp
-+stat_tiles_show_max = rainRate, hailRate, snowRate, UV
-+stat_tiles_show_sum = rain, ET, hail, snow, lightning_strike_count, windrun
-```
+     # For instructions, see https://github.com/Daveiano/weewx-wdc/wiki/Support-for-weewx-xaggs
+     # ONLY enable these if you have weewx-xaggs installed!
+@@ -201,6 +219,17 @@ SKIN_VERSION = 3.4.0
+     #[[Rounding]]
+         #dewpoint = 3
 
-Line 103:
-
-```diff
-+[[Icons]]
-+    #rain = "includes/icons/barometer.svg"
-
-```
-
-Line 106 following:
-
-```diff
-+#[[Rounding]]
-+   #dewpoint = 3
-
-[[tables]]
-+   #[[[Rounding]]]
-+      #outTemp = 3
-   [[[day]]]
-      aggregate_interval = 3600  # 1 hour
-
-[[diagrams]]
-+   #[[[Rounding]]]
-+      #barometer = 3
-```
-
-Line 96:
-
-```diff
-      [[diagrams]]
-         [[[combined_observations]]]
-            [[[[temp_min_max_avg]]]]
-                label = "Temperature Min/Max/Avg"
-                pointSize = 3
-                yScaleOffset = 0.5
-+               markerValue = 0
-+               markerColor = "#00BFFF"
-                [[[[[obs]]]]]
-                    [[[[[[outTemp_min]]]]]]
-                        observation = "outTemp"
-                        aggregate_type = "min"
-                        color = "#0198E1"
-                    [[[[[[outTemp_average]]]]]]
-                        observation = "outTemp"
-                        aggregate_type = "avg"
-                        color = "#666666"
-                    [[[[[[outTemp_max]]]]]]
-                        observation = "outTemp"
-                        aggregate_type = "max"
-                        color = "#8B0000"
-
-            [[[[tempdew]]]]
-                label = 'Temperature / Dewpoint'
-+               markerValue = 0
-+               markerColor = "#00BFFF"
-                [[[[[obs]]]]]
-                    [[[[[[temp]]]]]]
-                        observation = "outTemp"
-                    [[[[[[dew]]]]]]
-                        observation = "dewpoint"
-+                        color = "#5F9EA0"
-
-             [[[[windchill_heatindex]]]]
-                label = 'Windchill / Heatindex'
-                yScaleOffset = 0.5
-+               markerValue = 0
-+               markerColor = "#00BFFF"
-                [[[[[obs]]]]]
-                    [[[[[[chill]]]]]]
-                        observation = "windchill"
-                        color = '#0099CC'
-                    [[[[[[heat]]]]]]
-                        observation = "heatindex"
-                        color = '#610000'
-
-             [[[[wind]]]]
-                 label = 'Wind speed / Gust speed'
-                 yScaleMin = 0
-+                enableArea = True
-+                areaOpacity = 0.5
++    # For instructions, see https://github.com/Daveiano/weewx-wdc/wiki/Configuration#stat_tables
++    [[stat_tables]]
++        [[[tables_outtemp]]]
++            observation = "outTemp"
++            label = "Temperature Stat Table"
++            aggregate_types = "min", "avg", "max"
++        [[[tables_rain]]]
++            observation = "rain"
++            label = "Rain Stat Table"
++            aggregate_types = "sum", "avg"
++
+     [[tables]]
+         #[[[Rounding]]]
+             #outTemp = 3
+@@ -251,18 +280,18 @@ SKIN_VERSION = 3.4.0
+                 markerValue = 0
+                 markerColor = "#00BFFF"
                  [[[[[obs]]]]]
-                     [[[[[[speed]]]]]]
-                         observation = "windSpeed"
-+                        color = "#ffc000"
-                     [[[[[[gust]]]]]]
-                         observation = "windGust"
-+                        color = "#666666"
+-                    [[[[[[outTemp_min]]]]]]
++                    [[[[[[outTemp_max]]]]]]
+                         observation = "outTemp"
+-                        aggregate_type = "min"
+-                        color = "#0198E1"
++                        aggregate_type = "max"
++                        color = "#8B0000"
+                     [[[[[[outTemp_average]]]]]]
+                         observation = "outTemp"
+                         aggregate_type = "avg"
+                         color = "#666666"
+-                    [[[[[[outTemp_max]]]]]]
++                    [[[[[[outTemp_min]]]]]]
+                         observation = "outTemp"
+-                        aggregate_type = "max"
+-                        color = "#8B0000"
++                        aggregate_type = "min"
++                        color = "#0198E1"
 
-         # Diagram-type specific settings.
-         [[[line]]]
-             lineWidth = 2
-             pointSize = 5
-             isInteractive = True
-             enablePoints = True
-             enableCrosshair = True
-             yScaleOffset = 3
-+            enableArea = False
-+            areaOpacity = 0.07
-             # @see https://github.com/plouc/nivo/blob/master/packages/line/index.d.ts#L144
+             [[[[tempdew]]]]
+                 label = 'Temperature / Dewpoint'
+@@ -314,6 +343,7 @@ SKIN_VERSION = 3.4.0
+             areaOpacity = 0.07
+             # @see https://github.com/Daveiano/weewx-wdc/wiki/Configuration#diagrams, at "curve".
              curve = "natural"
++            legendPosition = "top right"
          [[[bar]]]
              enableLabel = False
              isInteractive = True
-             yScaleOffset = 3
+@@ -660,7 +690,7 @@ SKIN_VERSION = 3.4.0
+         daily_archive = %Y-%m-%d
 
-         # Observation specific settings.
--        [[[cloudbase]]]
-+        [[[outTemp]]]
-+            type = line
-+            color = "#8B0000"
-+        [[[dewpoint]]]
-+            type = line
-+            color = "#5F9EA0"
-+        [[[outHumidity]]]
-             yScaleMin = 0
--            yScaleOffset = 300
-+            yScaleMax = 103
-+            type = line
-+            enableArea = True
-+            color = "#0099CC"
-+        [[[pressure]]]
-+            yScaleOffset = 1
-+            type = line
-+            enableArea = True
-+            color = "#666666"
-+        [[[barometer]]]
-+            yScaleOffset = 1
-+            type = line
-+            enableArea = True
-+            color = "#666666"
-+        [[[altimeter]]]
-+            yScaleOffset = 1
-+            type = line
-+            enableArea = True
-+            color = "#666666"
-+        [[[windchill]]]
-+            type = line
-+            color = "#0099CC"
-+        [[[heatindex]]]
-+            type = line
-+            color = "#610000"
-         [[[windDir]]]
-             curve = "basis"
-             lineWidth = 0
-             yScaleMin = 0
-             yScaleMax = 360
-+            type = line
-+            color = "#161616"
-         [[[windSpeed]]]
-             yScaleMin = 0
-+            type = line
-+            enableArea = True
-+            color = "#ffc000"
-         [[[windGust]]]
-             aggregate_type = "max"
-             yScaleMin = 0
--        [[[radiation]]]
--            curve = "basis"
--            yScaleMin = 0
--        [[[UV]]]
--            aggregate_type = "max"
--            curve = "step"
--            yScaleMin = 0
--            yScaleOffset = 1
-+            type = line
-+            enableArea = True
-+            color = "#666666"
-         [[[rain]]]
-             aggregate_type = "sum"
-             yScaleOffset = 0.25
-+            type = bar
-+            color = "#0198E1"
-         [[[rainRate]]]
-             aggregate_type = "max"
-             curve = "linear"
-             yScaleMin = 0
-             yScaleOffset = 0.25
--        [[[outHumidity]]]
-+            type = line
-+            color = "#0a6794"
-+        [[[UV]]]
-+            aggregate_type = "max"
-+            curve = "step"
-             yScaleMin = 0
--            yScaleMax = 103
-+            yScaleOffset = 1
-+            type = line
-+            enableArea = True
-+            color = "#e61919"
-         [[[ET]]]
-             aggregate_type = "sum"
-             yScaleOffset = 0.02
--        [[[pressure]]]
--            yScaleOffset = 1
--        [[[barometer]]]
--            yScaleOffset = 1
--        [[[altimeter]]]
--            yScaleOffset = 1
--
--        # Context specific settings, alltime: if not set, will be calculated.
-+            type = bar
-+            color = "#E97451"
-+        [[[radiation]]]
-+            curve = "basis"
-+            yScaleMin = 0
-+            type = line
-+            enableArea = True
-+            color = "#ff8c00"
-+        [[[cloudbase]]]
-+            yScaleMin = 0
-+            yScaleOffset = 300
-+            type = line
-+            enableArea = True
-+            color = "#92b6f0"
-+        [[[appTemp]]]
-+            type = line
-+            color = "#C41E3A"
-+            markerValue = 0
-+            markerColor = "#00BFFF"
-+
-+        # Context specific settings, alltime: if aggregate_interval is not set,
-+        # it will be calculated.
-         [[[day]]]
-             aggregate_interval = 1800 # 30 minutes
--            [[[[ET]]]]
--                aggregate_interval = 7200  # 2 hours
--            [[[[rain]]]]
--                aggregate_interval = 7200  # 2 hours
-+            [[[[observations]]]]
-+                [[[[[tempdew]]]]]
-+                [[[[[outHumidity]]]]]
-+                [[[[[barometer]]]]]
-+                [[[[[windchill_heatindex]]]]]
-+                [[[[[wind]]]]]
-+                [[[[[windDir]]]]]
-+                [[[[[windRose]]]]]
-+                [[[[[rain]]]]]
-+                    aggregate_interval = 7200  # 2 hours
-+                [[[[[rainRate]]]]]
-+                [[[[[UV]]]]]
-+                [[[[[ET]]]]]
-+                    aggregate_interval = 7200  # 2 hours
-+                [[[[[radiation]]]]]
-+                [[[[[cloudbase]]]]]
-+                [[[[[appTemp]]]]]
+ [CopyGenerator]
+-    copy_once = dist/main.js, dist/main.css, plotly-custom-build.min.js, dist/live-updates.js, favicon.ico, icon-192x192.png, icon-256x256.png, icon-384x384.png, icon-512x512.png, service-worker.js, dist/assets
++    copy_once = dist/main.js, dist/main.css, plotly-custom-build.min.js, dist/live-updates.js, dist/colored-temperature.js, favicon.ico, icon-192x192.png, icon-256x256.png, icon-384x384.png, icon-512x512.png, service-worker.js, dist/assets
+     # copy_always =
 
-         [[[week]]]
-             aggregate_interval = 7200  # 2 hours
--            [[[[ET]]]]
--                aggregate_interval = 86400  # 1 day
--            [[[[rain]]]]
--                aggregate_interval = 86400  # 1 day
-+            [[[[observations]]]]
-+                [[[[[tempdew]]]]]
-+                [[[[[outHumidity]]]]]
-+                [[[[[barometer]]]]]
-+                [[[[[windchill_heatindex]]]]]
-+                [[[[[wind]]]]]
-+                [[[[[windDir]]]]]
-+                [[[[[windRose]]]]]
-+                [[[[[rain]]]]]
-+                    aggregate_interval = 86400  # 1 day
-+                [[[[[rainRate]]]]]
-+                [[[[[UV]]]]]
-+                [[[[[ET]]]]]
-+                    aggregate_interval = 86400  # 1 day
-+                [[[[[radiation]]]]]
-+                [[[[[cloudbase]]]]]
-+                [[[[[appTemp]]]]]
+ [Generators]
 
-         [[[month]]]
-             aggregate_interval = 21600  # 6 hours
--            [[[[ET]]]]
--                aggregate_interval = 172800  # 2 days
--            [[[[rain]]]]
--                aggregate_interval = 172800  # 2 days
-+            [[[[observations]]]]
-+                [[[[[temp_min_max_avg]]]]]
-+                [[[[[tempdew]]]]]
-+                [[[[[outHumidity]]]]]
-+                [[[[[barometer]]]]]
-+                [[[[[windchill_heatindex]]]]]
-+                [[[[[wind]]]]]
-+                [[[[[windDir]]]]]
-+                [[[[[windRose]]]]]
-+                [[[[[rain]]]]]
-+                    aggregate_interval = 172800  # 2 days
-+                [[[[[rainRate]]]]]
-+                [[[[[UV]]]]]
-+                [[[[[ET]]]]]
-+                    aggregate_interval = 172800  # 2 days
-+                [[[[[radiation]]]]]
-+                [[[[[cloudbase]]]]]
-+                [[[[[appTemp]]]]]
-
-         [[[year]]]
-             aggregate_interval = 172800  # 2 days
--            [[[[ET]]]]
--                aggregate_interval = 1555200  # 8 days
--            [[[[rain]]]]
--                aggregate_interval = 1555200  # 8 days
-+            [[[[observations]]]]
-+                [[[[[temp_min_max_avg]]]]]
-+                [[[[[tempdew]]]]]
-+                [[[[[outHumidity]]]]]
-+                [[[[[barometer]]]]]
-+                [[[[[windchill_heatindex]]]]]
-+                [[[[[wind]]]]]
-+                [[[[[windDir]]]]]
-+                [[[[[windRose]]]]]
-+                [[[[[rain]]]]]
-+                    aggregate_interval = 1555200  # 8 days
-+                [[[[[rainRate]]]]]
-+                [[[[[UV]]]]]
-+                [[[[[ET]]]]]
-+                    aggregate_interval = 1555200  # 8 days
-+                [[[[[radiation]]]]]
-+                [[[[[cloudbase]]]]]
-+                [[[[[appTemp]]]]]
-+
-+        [[[alltime]]]
-+            [[[[observations]]]]
-+                [[[[[temp_min_max_avg]]]]]
-+                [[[[[tempdew]]]]]
-+                [[[[[outHumidity]]]]]
-+                [[[[[barometer]]]]]
-+                [[[[[windchill_heatindex]]]]]
-+                [[[[[wind]]]]]
-+                [[[[[windDir]]]]]
-+                [[[[[windRose]]]]]
-+                [[[[[rain]]]]]
-+                [[[[[rainRate]]]]]
-+                [[[[[UV]]]]]
-+                [[[[[ET]]]]]
-+                [[[[[radiation]]]]]
-+                [[[[[cloudbase]]]]]
-+                [[[[[appTemp]]]]]
 ```
 
-Line 6:
+</details>
 
-```diff
-[Extras]
-+   # If weewx is installed in some sub-folder of your web server,
-+   # please specify the path here.
-+   base_path = /
-```
+## Known Issues
 
-Line 246:
+- GH-181 [BUG] xAxis: Date mismatch in combined charts. Especially when using cumulative aggregation. Feel free to comment if you have more infos, or also noticed this issue.
 
-```diff
-[CheetahGenerator]
-    encoding = html_entities
--   search_list_extensions = user.weewx_wdc.WdcGeneralUtil, user.weewx_wdc.WdcStatsUtil, user.weewx_wdc.WdcDiagramUtil, user.weewx_wdc.WdcCelestialUtil, user.weewx_wdc.WdcArchiveUtil, user.weewx_wdc.WdcTableUtil
-+   search_list_extensions = user.weewx_wdc.WdcGeneralUtil, user.weewx_wdc.WdcStatsUtil, user.weewx_wdc.WdcDiagramUtil, user.weewx_wdc.WdcCelestialUtil, user.weewx_wdc.WdcArchiveUtil, user.weewx_wdc.WdcTableUtil, user.weewx_wdc.WdcForecastUtil
+# 3.5.1
 
-+   #[[SummaryByDay]]
-+   #    [[[summary_day]]]
-+   #        template = day-archive/day-%Y-%m-%d.html.tmpl
-```
+- Bugfix: Reason: '<' not supported between instances of 'NoneType' and 'float' in the skins/weewx-wdc/year-%Y.html.tmpl file GH-256
+- Bugfix: Stat tile on page Today using custom data binding does not appear if the same observation does not exist in main data binding GH-258
 
-Line 309:
+## Known Issues
 
-```diff
-[Units]
-    [[TimeFormats]]
-        # @see https://weewx.com/docs/customizing.htm#Units_TimeFormats
-        day        = %X
-        week       = %x
-        month      = %x
-        year       = %x
-        rainyear   = %x
-        current    = %x %X
-        ephem_day  = %X
-        ephem_year = %x
-        stats      = %x %X
-+       daily_archive = %Y-%m-%d
-```
+- GH-181 [BUG] xAxis: Date mismatch in combined charts. Especially when using cumulative aggregation. Feel free to comment if you have more infos, or also noticed this issue.
+
+# Next

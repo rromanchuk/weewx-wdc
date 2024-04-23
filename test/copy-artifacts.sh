@@ -9,3 +9,6 @@ cp -R "$DIR"/test_install_report/artifacts-forecast-weewx-html "$DIR"/e2e-tests/
 cp -R "$DIR"/test_install_report/artifacts-custom-weewx-html "$DIR"/e2e-tests/artifacts-custom-weewx-html
 cp -R "$DIR"/test_install_report/artifacts-dwd-weewx-html "$DIR"/e2e-tests/artifacts-dwd-weewx-html
 cp -R "$DIR"/test_install_report/artifacts-custom-binding-weewx-html "$DIR"/e2e-tests/artifacts-custom-binding-weewx-html
+cp -R "$DIR"/test_install_report/artifacts-mqtt-weewx-html "$DIR"/e2e-tests/artifacts-mqtt-weewx-html
+cp -R "$DIR"/test_install_report/artifacts-sensor-status-weewx-html "$DIR"/e2e-tests/artifacts-sensor-status-weewx-html
+cp -R "$DIR"/test_install_report/artifacts-cmon-weewx-html "$DIR"/e2e-tests/artifacts-cmon-weewx-html

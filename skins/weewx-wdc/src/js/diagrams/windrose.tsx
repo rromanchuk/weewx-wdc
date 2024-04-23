@@ -53,11 +53,6 @@ export const WindRoseDiagram: FunctionComponent<WindRoseProps> = (
     };
   }, []);
 
-  console.log(backgroundColorDarkModeLightness);
-  colors.map((c: string) => {
-    console.log(color(c).lightness());
-  });
-
   const windroseDiagram = (
     <Plot
       data={props.data}
@@ -71,6 +66,12 @@ export const WindRoseDiagram: FunctionComponent<WindRoseProps> = (
           //orientation: "v",
           x: -0.5,
           y: 0.5,
+          title:
+            !props.showLegendUnits && !props.showBeaufort
+              ? {
+                  text: `   in ${props.unit}:`,
+                }
+              : undefined,
         },
         autosize: true,
         margin: {

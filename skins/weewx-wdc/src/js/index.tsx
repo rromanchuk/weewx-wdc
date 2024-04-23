@@ -1,11 +1,10 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
-import type { Serie } from "@nivo/line";
+
+import * as d3 from "d3";
 
 import { CarbonDataTableStateManager } from "carbon-data-table-state-manager";
-import { BarDiagram } from "./diagrams/bar";
-import { LineDiagram } from "./diagrams/line";
-import type { context, DiagramBaseProps, Series } from "./diagrams/types";
+import type { context, Serie, Series } from "./diagrams/types";
 import { CalendarDiagram } from "./diagrams/calendar";
 import { StatisticsSelect } from "./components/statistics-select";
 
@@ -13,6 +12,40 @@ import "./../scss/index.scss";
 import { WindRoseDiagram } from "./diagrams/windrose";
 import { DWDWarning } from "./components/dwd-warning";
 import { DWDForecast } from "./components/dwd-forecast";
+import { CombinedDiagram } from "./diagrams/d3/combined";
+import { D3BarDiagram } from "./diagrams/d3/bar";
+import { D3LineDiagram } from "./diagrams/d3/line";
+
+import type { locale } from "./diagrams/types";
+
+import localeDE from "./util/locale/de-DE.json";
+import localeEnUs from "./util/locale/en-US.json";
+import localeEnGb from "./util/locale/en-GB.json";
+import localeIT from "./util/locale/it-IT.json";
+import localeNL from "./util/locale/nl-NL.json";
+import { D3GaugeDiagram } from "./diagrams/d3/gauge";
+
+const localeString: locale = (window as any).weewxWdcConfig.locale;
+
+let localeDefault: d3.TimeLocaleDefinition =
+  localeEnUs as d3.TimeLocaleDefinition;
+
+switch (localeString) {
+  case "de-DE":
+    localeDefault = localeDE as d3.TimeLocaleDefinition;
+    break;
+  case "en-GB":
+    localeDefault = localeEnGb as d3.TimeLocaleDefinition;
+    break;
+  case "it-IT":
+    localeDefault = localeIT as d3.TimeLocaleDefinition;
+    break;
+  case "nl-NL":
+    localeDefault = localeNL as d3.TimeLocaleDefinition;
+    break;
+}
+
+const locale = d3.timeFormatDefaultLocale(localeDefault);
 
 const calendarDiagrams = document.querySelectorAll(
   "div.calendar-diagram-clim-wrap"
@@ -35,6 +68,30 @@ calendarDiagrams.forEach((diagram) => {
         color={JSON.parse((diagram.dataset.color as string).replace(/'/g, '"'))}
         observation={diagram.dataset.obs}
         heading={diagram.dataset.heading}
+        locale={locale}
+      />
+    );
+  }
+});
+
+const gauges = document.querySelectorAll(".diagram-tile.gauge div.diagram");
+
+gauges.forEach((gauge) => {
+  if (gauge instanceof HTMLElement && gauge.dataset.value) {
+    const root = createRoot(gauge);
+    const gaugeDataInit = (window as any)[gauge.dataset.value];
+
+    root.render(
+      <D3GaugeDiagram
+        current={parseFloat(gaugeDataInit.current)}
+        min={parseFloat(gaugeDataInit.min)}
+        max={parseFloat(gaugeDataInit.max)}
+        unit={gaugeDataInit.unit}
+        obs={gaugeDataInit.obs}
+        rounding={gaugeDataInit.rounding}
+        properties={gaugeDataInit.properties}
+        label={gaugeDataInit.label}
+        seriesName={gauge.dataset.value}
       />
     );
   }
@@ -47,13 +104,19 @@ diagrams.forEach((diagram) => {
     diagram.dataset.value &&
     diagram.dataset.labels &&
     diagram.dataset.aggregateType &&
-    diagram.dataset.obs &&
     diagram.dataset.context &&
-    diagram.dataset.color
+    diagram.dataset.color &&
+    diagram.dataset.diagram &&
+    diagram.dataset.unit
   ) {
     let data: Serie[] = [];
     let nivoProps: any = {};
     const combined = diagram.classList.contains("combined");
+    const diagramTypes = JSON.parse(diagram.dataset.diagram.replace(/'/g, '"'));
+    const diagramObservations = diagram.dataset.observations
+      ? JSON.parse(diagram.dataset.observations.replace(/'/g, '"'))
+      : [diagram.dataset.obs];
+    const diagramTypesUnique = [...new Set(diagramTypes)];
     const root = createRoot(diagram);
 
     if (combined) {
@@ -65,20 +128,24 @@ diagrams.forEach((diagram) => {
         diagram.dataset.value.replace(/'/g, '"')
       );
 
+      // Filter out null values.
+      // @see https://groups.google.com/g/weewx-development/c/frA0Vc9Ku9Q
       series.forEach((serie, index) => {
         data = [
           ...data,
           {
-            id: `${labels[index]} ${
-              aggregate_types[index][0].toUpperCase() +
-              aggregate_types[index].slice(1)
-            }`,
+            observation: diagramObservations[index],
+            id: `${labels[index]} ${aggregate_types[index]}`,
             data: (window as any)[serie]
-              .map((item: number[]) => ({
-                x: item[0],
-                y: item[2],
-                end: item[1],
-              }))
+              .filter((item: number[] | null[]) => item[2] !== null)
+              .map((item: number[]) => {
+                return {
+                  x: item[0],
+                  y: item[2],
+                  start: item[0],
+                  end: item[1],
+                };
+              })
               .sort((a: Series, b: Series) => a.x - b.x),
           },
         ];
@@ -86,13 +153,18 @@ diagrams.forEach((diagram) => {
     } else {
       data = [
         {
-          id: diagram.dataset.obs,
+          observation: diagramObservations[0],
+          id: diagramObservations[0],
           data: (window as any)[diagram.dataset.value]
-            .map((item: number[]) => ({
-              x: item[0],
-              y: item[2],
-              end: item[1],
-            }))
+            .filter((item: number[] | null[]) => item[2] !== null)
+            .map((item: number[]) => {
+              return {
+                x: item[0],
+                y: item[2],
+                start: item[0],
+                end: item[1],
+              };
+            })
             .sort((a: Series, b: Series) => a.x - b.x),
         },
       ];
@@ -108,38 +180,63 @@ diagrams.forEach((diagram) => {
       }
     }
 
-    switch (diagram.dataset.diagram) {
-      case "bar":
-        root.render(
-          <BarDiagram
-            color={JSON.parse(diagram.dataset.color.replace(/'/g, '"'))}
-            unit={
-              diagram.dataset.unit
-                ? JSON.parse(diagram.dataset.unit.replace(/'/g, '"'))
-                : ""
-            }
-            data={data}
-            observation={diagram.dataset.obs}
-            context={diagram.dataset.context as context}
-            nivoProps={nivoProps}
-          />
-        );
-        break;
-      default:
-        root.render(
-          <LineDiagram
-            color={JSON.parse(diagram.dataset.color.replace(/'/g, '"'))}
-            unit={
-              diagram.dataset.unit
-                ? JSON.parse(diagram.dataset.unit.replace(/'/g, '"'))
-                : ""
-            }
-            data={data}
-            observation={diagram.dataset.obs}
-            context={diagram.dataset.context as context}
-            nivoProps={nivoProps}
-          />
-        );
+    if (
+      diagramTypesUnique.length === 1 &&
+      diagramTypesUnique[0] === "line" &&
+      diagram.dataset.combinedkeys
+    ) {
+      root.render(
+        <D3LineDiagram
+          color={JSON.parse(diagram.dataset.color.replace(/'/g, '"'))}
+          unit={JSON.parse(diagram.dataset.unit.replace(/'/g, '"'))}
+          data={data}
+          observation={diagramObservations}
+          observationCombinedKeys={JSON.parse(
+            diagram.dataset.combinedkeys.replace(/'/g, '"')
+          )}
+          context={diagram.dataset.context as context}
+          nivoProps={nivoProps}
+          locale={locale}
+        />
+      );
+    }
+
+    // Bar diagrams.
+    if (diagramTypesUnique.length === 1 && diagramTypesUnique[0] === "bar") {
+      root.render(
+        <D3BarDiagram
+          color={JSON.parse(diagram.dataset.color.replace(/'/g, '"'))}
+          unit={JSON.parse(diagram.dataset.unit.replace(/'/g, '"'))}
+          data={data}
+          observation={diagramObservations}
+          context={diagram.dataset.context as context}
+          nivoProps={nivoProps}
+          locale={locale}
+        />
+      );
+    }
+
+    if (
+      diagramTypesUnique.length === 2 &&
+      diagramTypesUnique.includes("bar") &&
+      diagramTypesUnique.includes("line") &&
+      diagram.dataset.combinedkeys
+    ) {
+      root.render(
+        <CombinedDiagram
+          color={JSON.parse(diagram.dataset.color.replace(/'/g, '"'))}
+          unit={JSON.parse(diagram.dataset.unit.replace(/'/g, '"'))}
+          data={data}
+          observation={diagramObservations}
+          observationCombinedKeys={JSON.parse(
+            diagram.dataset.combinedkeys.replace(/'/g, '"')
+          )}
+          context={diagram.dataset.context as context}
+          nivoProps={nivoProps}
+          chartTypes={diagramTypes}
+          locale={locale}
+        />
+      );
     }
   }
 });
@@ -151,10 +248,18 @@ plotlyDiagrams.forEach((plotyDiagram) => {
   if (
     plotyDiagram.classList.contains("windrose") &&
     plotyDiagram instanceof HTMLElement &&
-    plotyDiagram.dataset.value
+    plotyDiagram.dataset.value &&
+    plotyDiagram.dataset.unit &&
+    plotyDiagram.dataset.showLegendUnit &&
+    plotyDiagram.dataset.showBeaufort
   ) {
     root.render(
-      <WindRoseDiagram data={(window as any)[plotyDiagram.dataset.value]} />
+      <WindRoseDiagram
+        data={(window as any)[plotyDiagram.dataset.value]}
+        unit={plotyDiagram.dataset.unit}
+        showLegendUnits={plotyDiagram.dataset.showLegendUnit === "True"}
+        showBeaufort={plotyDiagram.dataset.showBeaufort === "True"}
+      />
     );
   }
 });
