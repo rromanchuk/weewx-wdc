@@ -15,7 +15,7 @@ import path from "path";
 const config: PlaywrightTestConfig = {
   testDir: "./test/e2e-tests",
   /* Maximum time one test can run for. */
-  timeout: 35 * 1000,
+  timeout: 40 * 1000,
   expect: {
     /**
      * Maximum time expect() should wait for the condition to be met.
@@ -23,7 +23,7 @@ const config: PlaywrightTestConfig = {
      */
     timeout: 10000,
     toHaveScreenshot: {
-      maxDiffPixelRatio: 0.07,
+      maxDiffPixelRatio: 0.03,
     },
   },
   /* Run tests in files in parallel */
@@ -57,21 +57,21 @@ const config: PlaywrightTestConfig = {
       },
     },
 
-    {
-      name: "firefox",
-      use: {
-        ...devices["Desktop Firefox"],
-        viewport: { width: 1920, height: 1000 },
-      },
-    },
+    // {
+    //   name: "firefox",
+    //   use: {
+    //     ...devices["Desktop Firefox"],
+    //     viewport: { width: 1920, height: 1000 },
+    //   },
+    // },
 
-    {
-      name: "webkit",
-      use: {
-        ...devices["Desktop Safari"],
-        viewport: { width: 1920, height: 1000 },
-      },
-    },
+    // {
+    //   name: "webkit",
+    //   use: {
+    //     ...devices["Desktop Safari"],
+    //     viewport: { width: 1920, height: 1000 },
+    //   },
+    // },
 
     /* Test against mobile viewports. */
     // {

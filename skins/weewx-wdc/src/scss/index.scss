@@ -16,8 +16,21 @@ bx-header,
 bx-btn,
 bx-tooltip,
 bx-tooltip-definition,
-bx-structured-list {
+bx-structured-list,
+cds-modal {
   @include carbon--theme($carbon--theme--g10, true);
+}
+
+cds-modal cds-modal-body {
+  img,
+  video {
+    max-width: 100%;
+    height: auto;
+    max-height: 100%;
+    width: auto;
+    margin: 0 auto;
+    display: block;
+  }
 }
 
 html.dark {
@@ -32,7 +45,8 @@ html.dark {
   bx-btn,
   bx-tooltip,
   bx-tooltip-definition,
-  bx-structured-list {
+  bx-structured-list,
+  cds-modal {
     @include carbon--theme($carbon--theme--g90, true);
   }
 
@@ -93,6 +107,11 @@ html.dark {
   }
 
   .almanac-tile svg {
+    @include carbon--theme($carbon--theme--g90, true);
+    fill: $text-02;
+  }
+
+  .stat-tile svg.icon-link {
     @include carbon--theme($carbon--theme--g90, true);
     fill: $text-02;
   }
@@ -228,14 +247,26 @@ html {
   overflow-x: hidden;
 }
 
-bx-header:not(:defined) {
-  display: none;
-}
-
 // Side nav width is $spacing-09.
 bx-header ~ bx-side-nav {
   margin-top: 3rem;
   height: calc(100% - 3rem);
+}
+
+bx-side-nav {
+  z-index: 1400;
+  bx-side-nav-items {
+    overflow-y: auto;
+  }
+  @include carbon--breakpoint-down(lg) {
+    z-index: 1600;
+  }
+}
+
+body.theme-classic {
+  bx-side-nav {
+    z-index: 1600;
+  }
 }
 
 .bx--header__name {
@@ -246,7 +277,8 @@ bx-header ~ bx-side-nav {
 }
 
 bx-header-name {
-  svg {
+  svg,
+  img.logo {
     height: auto;
     max-width: 32px;
     margin-right: $spacing-03;
@@ -287,6 +319,15 @@ bx-structured-list-cell,
 .bx--row {
   margin-left: -0.5rem;
   margin-right: -0.5rem;
+}
+
+.custom-content {
+  &.top {
+    margin-bottom: $spacing-05;
+  }
+  &.bottom {
+    margin-bottom: $spacing-05;
+  }
 }
 
 main.user-page {
@@ -333,6 +374,10 @@ main.user-page {
   a {
     color: $link-01;
   }
+  img {
+    max-width: 100%;
+    height: auto;
+  }
 }
 
 header.page-header {
@@ -369,6 +414,11 @@ header.section-header {
   > div {
     padding-bottom: 1rem;
   }
+  #panel-climatogram {
+    div.diagram.combined {
+      height: 400px;
+    }
+  }
 }
 .climatological-tile {
   bx-tooltip-body {
@@ -396,6 +446,13 @@ header.section-header {
         display: none;
       }
     }
+  }
+}
+
+.clim-days-extended-table {
+  @include carbon--breakpoint-up(xlg) {
+    display: block;
+    max-width: 75%;
   }
 }
 
@@ -463,13 +520,27 @@ header.section-header {
   }
 }
 
+a.stat-tile-link,
+a.stat-tile-link * {
+  text-decoration: none;
+  color: inherit;
+}
+
 .stat-tile {
   margin-bottom: $spacing-05;
   height: calc(100% - #{$spacing-05});
+  transition: background-color 350ms ease;
   bx-tooltip-definition {
     padding-bottom: $spacing-01;
   }
   > .bx--row {
+    position: relative;
+    svg.icon-link {
+      position: absolute;
+      right: 0;
+      top: 0;
+      width: 24px;
+    }
     align-items: center;
     .label {
       @include carbon--type-style("expressive-heading-02");
@@ -489,6 +560,7 @@ header.section-header {
           max-width: 24px;
           vertical-align: text-bottom;
           margin-right: 0;
+          transition: transform 350ms ease;
         }
       }
       > span {
@@ -499,7 +571,7 @@ header.section-header {
           max-width: 100%;
           overflow: hidden;
         }
-        span {
+        span:not(.raw) {
           @include carbon--type-style("productive-heading-01");
         }
       }
@@ -509,6 +581,7 @@ header.section-header {
     }
     .stat-value {
       @include carbon--type-style("productive-heading-01");
+      display: flex;
     }
   }
   .bx--row ~ .bx--row {
@@ -558,6 +631,16 @@ header.section-header {
 
 .diagram-tile {
   margin-bottom: $spacing-05;
+  &.gauge {
+    .diagram {
+      // height: 200px;
+      // @include carbon--breakpoint-up(md) {
+      //   height: 300px;
+      // }
+      aspect-ratio: 12 / 8.5;
+      height: auto;
+    }
+  }
   &.combined {
     .label {
       span {
@@ -569,10 +652,42 @@ header.section-header {
   .diagram {
     position: relative;
     @include fullscreen();
+    .diagram-legend {
+      position: absolute;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: start;
+      margin-top: $spacing-04;
+      .legend-item {
+        display: flex;
+        align-items: center;
+        margin-right: $spacing-04;
+        margin-bottom: $spacing-02;
+        .legend-color {
+          margin-right: 5px;
+        }
+        .legend-label {
+          font-size: 11px;
+        }
+      }
+    }
   }
   &:hover {
     .maximize {
       opacity: 1;
+    }
+  }
+  &:fullscreen {
+    .bx--row,
+    .bx--col {
+      height: 100%;
+    }
+    .value {
+      height: 95%;
+      .diagram {
+        height: 100% !important;
+      }
     }
   }
 }
@@ -607,11 +722,22 @@ header.section-header {
 }
 
 .tile-radar-forecast {
-  img {
+  img,
+  video {
     width: 100%;
     display: block;
     height: auto;
     margin: 0 auto;
+  }
+}
+
+div[id^="panel"] .tile-radar-forecast {
+  min-height: auto;
+}
+
+.radar-container .bx-ce-demo-devenv--tab-panels {
+  > div {
+    padding-bottom: 0;
   }
 }
 
@@ -631,6 +757,27 @@ header.section-header {
     }
     & ~ .forecast {
       margin-top: $spacing-06;
+    }
+    .precip-main + .precip-detail {
+      margin-top: $spacing-04;
+    }
+    div.precip-detail {
+      display: flex;
+      align-items: center;
+      svg {
+        max-width: 16px;
+        height: auto;
+        margin-right: 5px;
+      }
+    }
+    .windgust {
+      display: flex;
+      align-items: center;
+      margin-top: 0.75em;
+      svg {
+        max-width: 24px;
+        margin-right: 5px;
+      }
     }
     // bx-structured-list-row,
     // bx-structured-list-header-row {
@@ -826,7 +973,8 @@ bx-structured-list.forecast-list,
 
 .diagram-tooltip,
 .diagram text,
-.calendar-diagram text {
+.calendar-diagram text,
+.diagram-legend {
   font-family: carbon--font-family("mono"), monospace;
 }
 
@@ -892,10 +1040,16 @@ bx-structured-list.forecast-list,
   white-space: nowrap;
 }
 
+.main.bx--content {
+  position: relative;
+  z-index: 1500;
+}
+
 @include carbon--breakpoint-up(lg) {
-  section.main.bx--content,
+  .main.bx--content,
   #footer {
-    padding-left: 16rem;
+    margin-left: 16rem;
+    padding-left: 0;
     padding-right: 1rem;
   }
 }
@@ -909,6 +1063,17 @@ bx-structured-list.forecast-list,
 .sidebar-heading {
   pointer-events: none;
   cursor: default;
+}
+
+.webcam-tile {
+  video {
+    max-width: 100%;
+    height: auto;
+  }
+}
+
+.climatological-day-table {
+  overflow-x: auto;
 }
 
 body.theme-classic {
@@ -945,16 +1110,17 @@ body.theme-classic {
   }
   .main.bx--content,
   #footer {
+    margin-left: 0;
     padding-left: 0;
     padding-right: 0;
 
     @include carbon--breakpoint-up(md) {
-      padding-left: 2rem;
+      margin-left: 2rem;
       padding-right: 0rem;
       margin-right: -1rem;
     }
     @include carbon--breakpoint-up(lg) {
-      padding-left: 2rem;
+      margin-left: 2rem;
       padding-right: 1rem;
       margin-right: 0;
     }
@@ -975,9 +1141,10 @@ body.theme-classic {
 
 body.theme-alternative {
   @include carbon--breakpoint-down(lg) {
-    section.main.bx--content,
+    .main.bx--content,
     #footer {
       padding-left: 0;
+      margin-left: 0;
       padding-right: 0;
     }
   }

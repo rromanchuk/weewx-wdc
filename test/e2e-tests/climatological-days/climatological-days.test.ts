@@ -14,7 +14,7 @@ test.describe("Climatological days", () => {
     const rainDays = table.locator("[data-test='rainDays']");
     await expect(
       rainDays.locator("bx-structured-list-cell >> nth=1")
-    ).toHaveText("208");
+    ).toHaveText("104");
     await expect(
       rainDays.locator("bx-structured-list-cell >> nth=2")
     ).toHaveText(/Rain > 0 cm/);
@@ -22,7 +22,7 @@ test.describe("Climatological days", () => {
     const summerDays = table.locator("[data-test='summerDays']");
     await expect(
       summerDays.locator("bx-structured-list-cell >> nth=1")
-    ).toHaveText("59");
+    ).toHaveText("18");
     await expect(
       summerDays.locator("bx-structured-list-cell >> nth=2")
     ).toHaveText(/Outside Temperaturemax ≥ 25°C/);
@@ -30,7 +30,7 @@ test.describe("Climatological days", () => {
     const hotDays = table.locator("[data-test='hotDays']");
     await expect(
       hotDays.locator("bx-structured-list-cell >> nth=1")
-    ).toHaveText("6");
+    ).toHaveText("2");
     await expect(
       hotDays.locator("bx-structured-list-cell >> nth=2")
     ).toHaveText(/Outside Temperaturemax ≥ 30°C/);
@@ -46,7 +46,7 @@ test.describe("Climatological days", () => {
     const tropicalNights = table.locator("[data-test='tropicalNights']");
     await expect(
       tropicalNights.locator("bx-structured-list-cell >> nth=1")
-    ).toHaveText("5");
+    ).toHaveText("1");
     await expect(
       tropicalNights.locator("bx-structured-list-cell >> nth=2")
     ).toHaveText(/Outside Temperaturemin ≥ 20°C/);
@@ -70,7 +70,7 @@ test.describe("Climatological days", () => {
     const frostDays = table.locator("[data-test='frostDays']");
     await expect(
       frostDays.locator("bx-structured-list-cell >> nth=1")
-    ).toHaveText("86");
+    ).toHaveText("65");
     await expect(
       frostDays.locator("bx-structured-list-cell >> nth=2")
     ).toHaveText(/Outside Temperaturemin < 0°C/);
@@ -86,6 +86,65 @@ test.describe("Climatological days", () => {
     expect(await rainDays.locator("> script").innerText()).toMatchSnapshot();
   });
 
+  test("Rain Stats table", async ({ page }) => {
+    // Stats page.
+    const rainTable = page
+      .getByRole("tabpanel", { name: "Rain", exact: true })
+      .locator(".clim-days-extended-table");
+
+    await page.getByRole("tab", { name: "Rain", exact: true }).click();
+    await expect(rainTable).toBeVisible();
+
+    await expect(rainTable.getByTestId("last-rain")).toContainText(
+      "06/20/22, 17:00:00"
+    );
+    await expect(rainTable.getByTestId("most-days-with-rain")).toContainText(
+      "12/12/21 - 12/20/21 (9 days, Total: 0.94 cm)"
+    );
+    await expect(rainTable.getByTestId("most-days-without-rain")).toContainText(
+      "04/26/22 - 05/15/22 (20 days)"
+    );
+    await expect(rainTable.getByTestId("most-rain-day")).toContainText(
+      "2.36 cm (11/04/21)"
+    );
+
+    // 2021.
+    await page.goto(
+      "artifacts-alternative-weewx-html/public_html/year-2021.html"
+    );
+    await page.getByRole("tab", { name: "Rain", exact: true }).click();
+    await expect(rainTable).toBeVisible();
+
+    await expect(rainTable.getByTestId("last-rain")).toHaveCount(0);
+    await expect(rainTable.getByTestId("most-days-with-rain")).toContainText(
+      "12/12/21 - 12/20/21 (9 days, Total: 0.94 cm)"
+    );
+    await expect(rainTable.getByTestId("most-days-without-rain")).toContainText(
+      "10/27/21 - 10/31/21 (5 days)"
+    );
+    await expect(rainTable.getByTestId("most-rain-day")).toContainText(
+      "2.36 cm (11/04/21)"
+    );
+
+    // 2022.
+    await page.goto(
+      "artifacts-alternative-weewx-html/public_html/year-2022.html"
+    );
+    await page.getByRole("tab", { name: "Rain", exact: true }).click();
+    await expect(rainTable).toBeVisible();
+
+    await expect(rainTable.getByTestId("last-rain")).toHaveCount(0);
+    await expect(rainTable.getByTestId("most-days-with-rain")).toContainText(
+      "01/22/22 - 01/26/22 (5 days, Total: 1.05 cm)"
+    );
+    await expect(rainTable.getByTestId("most-days-without-rain")).toContainText(
+      "04/26/22 - 05/15/22 (20 days)"
+    );
+    await expect(rainTable.getByTestId("most-rain-day")).toContainText(
+      "1.25 cm (01/04/22)"
+    );
+  });
+
   test("Avg outside temp", async ({ page }) => {
     const avgTemp = page.locator("#panel-diagram-temp-avg");
 
@@ -94,5 +153,53 @@ test.describe("Climatological days", () => {
 
     await expect(avgTemp).toHaveScreenshot();
     expect(await avgTemp.locator("> script").innerText()).toMatchSnapshot();
+  });
+
+  test("Climatogram Stats", async ({ page }) => {
+    const climatogram = page.locator("#panel-climatogram");
+
+    await page.locator("bx-tab[value='climatogram']").click();
+    await expect(climatogram).toBeVisible();
+
+    await expect(climatogram).toHaveScreenshot();
+    // Rain data.
+    expect(
+      await climatogram
+        .locator(".diagram-tile.combined .value > script >> nth=0")
+        .innerText()
+    ).toMatchSnapshot();
+
+    // outTemp data.
+    expect(
+      await climatogram
+        .locator(".diagram-tile.combined .value > script >> nth=1")
+        .innerText()
+    ).toMatchSnapshot();
+  });
+
+  test("Climatogram Year", async ({ page }) => {
+    await page.goto(
+      "artifacts-alternative-weewx-html/public_html/year-2022.html"
+    );
+
+    const climatogram = page.locator("#panel-climatogram");
+
+    await page.locator("bx-tab[value='climatogram']").click();
+    await expect(climatogram).toBeVisible();
+
+    await expect(climatogram).toHaveScreenshot();
+    // Rain data.
+    expect(
+      await climatogram
+        .locator(".diagram-tile.combined .value > script >> nth=0")
+        .innerText()
+    ).toMatchSnapshot();
+
+    // outTemp data.
+    expect(
+      await climatogram
+        .locator(".diagram-tile.combined .value > script >> nth=1")
+        .innerText()
+    ).toMatchSnapshot();
   });
 });

@@ -2,10 +2,11 @@
 #errorCatcher Echo
 #encoding UTF-8
 #import html
+#import datetime
 #set $diagrams_config = $DisplayOptions.get("diagrams", {})
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<script src="https://cdnjs.cloudflare.com/ajax/libs/webcomponentsjs/2.6.0/webcomponents-loader.min.js"></script>
+
 <script async src="https://metrics.romanch.uk/gtag/js?id=G-24Q5EDRSF7"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
@@ -15,13 +16,7 @@
     'transport_url': 'https://metrics.romanch.uk'
   });
 </script>
-<!-- <script>
-  window.WebComponents = window.WebComponents || {};
-  window.WebComponents.root = "node_modules/@webcomponents/webcomponentsjs/";
-</script> -->
-#if $get_windrose_enabled()
-<script src="$get_base_path(path='plotly-custom-build.min.js')" defer></script>
-#end if
+
 <link
   href="$get_base_path(path='dist/main.css')"
   rel="preload"
@@ -31,6 +26,16 @@
 <noscript
   ><link rel="stylesheet" href="$get_base_path(path='dist/main.css')"
 /></noscript>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/webcomponentsjs/2.6.0/webcomponents-loader.min.js"></script>
+<!-- <script>
+  window.WebComponents = window.WebComponents || {};
+  window.WebComponents.root = "node_modules/@webcomponents/webcomponentsjs/";
+</script> -->
+#if $get_windrose_enabled()
+<script src="$get_base_path(path='plotly-custom-build.min.js')" defer></script>
+#end if
+
 <link
   rel="icon"
   type="image/x-icon"
@@ -87,13 +92,29 @@
       "Archive_day": "$gettext('Archive day')",
       "stats_helper_text": "$gettext('Choose a day to view a statistics page. You can also filter/search for a date by start typing, eg:')",
       "Format_is": "$gettext('Format is')",
-    }
+    },
+    locale: "$get_locale()",
+    time: $datetime.datetime.now().timestamp(),
+    defaultTheme: '$DisplayOptions.get("default_theme", "auto")',
+    color_temperature: $to_int($to_bool($DisplayOptions.get("outTemp_stat_tile_color", "False"))),
+    color_temperature_transparency: $DisplayOptions.get("outTemp_stat_tile_color_transparency", "0.5"),
+    color_temperature_min: $DisplayOptions.get("outTemp_stat_tile_color_min", "-20"),
+    color_temperature_max: $DisplayOptions.get("outTemp_stat_tile_color_max", "40"),
   };
 </script>
+
+<script
+  type="module"
+  src="https://1.www.s81c.com/common/carbon/web-components/version/v2.0.1/modal.min.js"
+></script>
 
 #if "heights" in $diagrams_config
 <!--prettier-ignore-->
 <style>
+  *:not(:defined) {
+    display: none;
+  }
+
   #if "alternative" in $diagrams_config.heights
     #if "height" in $diagrams_config.heights.alternative
       .diagram {

@@ -21,6 +21,8 @@ test/test_install_report/src/weewx-wdc.zip
 test/shunit2
 test/*/artifacts*
 
+stats.json
+
 # yarn
 .yarn/*
 !.yarn/patches
@@ -34,6 +36,9 @@ test/*/artifacts*
 /test-results/
 /playwright-report/
 /playwright/.cache/
+
+# Apple
+.DS_Store
 
 .ddev
 .env
