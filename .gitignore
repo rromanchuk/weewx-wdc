@@ -37,6 +37,9 @@ stats.json
 /playwright-report/
 /playwright/.cache/
 
+# Apple
+.DS_Store
+
 .ddev
 .env
 shdotenv

@@ -39,7 +39,7 @@
       <div class="bx--col">
         <!--prettier-ignore-->
         <p class="footnote">
-           $gettext("Let's send <a target='_blank' href='https://coop.farm'>chickens</a> to mars.")
+           $gettext("Let's send <a target='_blank' href='https://app.coop.farm'>chickens</a> to mars.")
         </p>
       </div>
     </div>
